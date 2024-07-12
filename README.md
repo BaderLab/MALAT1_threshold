@@ -32,7 +32,11 @@ good_sobj <- subset(sobj, cells = good_cells)
 
 ## Example analysis
 
-We can demonstrate using this function with the Tabula Muris Senis Pancreas dataset which can be downloaded as a Seurat object from [cellxgene](https://cellxgene.cziscience.com/collections/0b9d8a04-bb9d-44da-aa27-705bb65b54eb). Here is a brief look at the cells in the dataset:
+We can demonstrate using this function with the Tabula Muris Senis Pancreas dataset which can be downloaded as a Seurat object from [cellxgene](https://cellxgene.cziscience.com/collections/0b9d8a04-bb9d-44da-aa27-705bb65b54eb). The data are also described in this paper:
+
+The Tabula Muris Consortium. A single-cell transcriptomic atlas characterizes ageing tissues in the mouse. Nature 583, 590–595 (2020). https://doi.org/10.1038/s41586-020-2496-1
+
+Here is a brief look at the cells in the dataset:
 
 <img width="400" alt="tabula_muris_senis_pancreas_celltypes" src="https://github.com/user-attachments/assets/bc4a6e67-640c-44d3-b699-0d63860d83bc">
 
