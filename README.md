@@ -38,8 +38,8 @@ We can demonstrate using this function with the Tabula Muris Senis Pancreas data
 
 Here is _MALAT1_ projected onto the UMAP, and a histogram of the normalized _MALAT1_ values for that dataset. You can see that certain cells in the pancreatic acinar cell cluster have especially low _MALAT1_ values and may be suffering from some quality issues. Cells that may actually be empty droplets would be those in the lower _MALAT1_ expression peak in the histogram, in addition to those with a peak at zero:
 
-<img width="390" alt="tabula_muris_senis_pancreas_malat1_umap" src="https://github.com/user-attachments/assets/5ed0ba68-efc4-45cd-bdf4-d4a9e403a6f2">
-<img width="400" alt="tabula_muris_senis_pancreas_malat1_hist_noLine" src="https://github.com/user-attachments/assets/48c2e7c3-0240-4a2b-afb3-98f289838b32">
+<img width="400" alt="tabula_muris_senis_pancreas_malat1_umap" src="https://github.com/user-attachments/assets/5ed0ba68-efc4-45cd-bdf4-d4a9e403a6f2">
+<img width="397" alt="tabula_muris_senis_pancreas_malat1_hist_noLine" src="https://github.com/user-attachments/assets/5ba81742-0295-4605-a8f0-7384f108dd32">
 
 This function fits a density function to the histogram, and models a quadratic to the highest _MALAT1_ expression peak above the normalized expression value of two. It finds this peak by analysing local minima and maxima that appear on the density function. The lower x-intercept of this quadratic is used to define the minimum _MALAT1_ threshold.
 
