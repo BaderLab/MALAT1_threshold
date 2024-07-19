@@ -4,6 +4,8 @@ For a detailed explanation of our findings or citation of this work, please see 
 
 Low _MALAT1_ expression is associated with a lack of a nucleus in single-cell RNA-sequencing data. Cells without nuclei are likely either empty droplets filled with ambient RNA, cell fragments, or mature erythrocytes. Our function `define_malat1_threshold` takes a vector of normalized _MALAT1_ expression, and outputs a minimum threshold value that can be used to filter your scRNA-seq object.
 
+We hope to develop a package to allow a user to easily access this function. In the meantime, you can use this the function by either pasting the code directly into your R script, or cloning the GitHub repo, moving the `malat1_function.R` script into your analysis directory, and adding `source("malat1_function.R")` to the top of your script to access the function.
+
 To use this function, isolate the normalized _MALAT1_ expression values from your scRNA-seq object. In a Seurat object, this may look like:
 
 ```
