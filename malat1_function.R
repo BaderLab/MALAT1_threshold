@@ -140,7 +140,7 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
       geom_vline(xintercept = x_intercept1, color = "red", linewidth = lwd) +
       ggtitle("MALAT1")
 
-    plots <- patchwork::wrap_plots(p1, p2, p3, p4, ncol = 2)
+    plots <- patchwork::wrap_plots(p1, p2, p3, p4, ncol = 2) + patchwork::plot_annotation(tag_levels = "A")
 
     if (isTRUE(x = print_plots)) {
       print(plots)
