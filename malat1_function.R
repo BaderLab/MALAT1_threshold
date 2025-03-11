@@ -59,9 +59,9 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
 
     # Plot the density with the local maxima using ggplot2
     p1 <- ggplot() +
-      geom_line(data = density_df, aes(x = x, y = y), color = "black", na.rm = TRUE) +
-      geom_line(data = fit_df, aes(x = x, y = y), color = "blue", na.rm = TRUE) +
-      geom_point(data = local_maxima_df, aes(x = x, y = y), color = "red", size = 3, na.rm = TRUE) +
+      geom_line(data = density_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "black", na.rm = TRUE) +
+      geom_line(data = fit_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "blue", na.rm = TRUE) +
+      geom_point(data = local_maxima_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "red", size = 3, na.rm = TRUE) +
       ggtitle("Density Plot with Local Maxima") +
       cowplot::theme_cowplot() +
       ylim(-0.05, NA)
@@ -78,9 +78,9 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
 
     # Plot the density with the local minima using ggplot2
     p2 <- ggplot() +
-      geom_line(data = density_df, aes(x = x, y = y), color = "black", na.rm = TRUE) +
-      geom_line(data = fit_df, aes(x = x, y = y), color = "blue", na.rm = TRUE) +
-      geom_point(data = local_minima_df, aes(x = x, y = y), color = "red", size = 3, na.rm = TRUE) +
+      geom_line(data = density_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "black", na.rm = TRUE) +
+      geom_line(data = fit_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "blue", na.rm = TRUE) +
+      geom_point(data = local_minima_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "red", size = 3, na.rm = TRUE) +
       ggtitle("Density Plot with Local Minima") +
       cowplot::theme_cowplot() +
       ylim(-0.05, NA)
@@ -107,9 +107,9 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
     # Fit a quadratic model (y ~ x + I(x^2))
     quad_model <- lm(y ~ poly(x, 2, raw = TRUE), data = subset_df)
 
-    p3 <- ggplot(df, aes(x = x, y = y)) +
+    p3 <- ggplot(df, aes(x = .data[["x"]], y = .data[["y"]])) +
       geom_line(color = "black") +
-      geom_point(data = subset_df, aes(x = x, y = y), color = "blue", size = 2, na.rm = TRUE) +
+      geom_point(data = subset_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "blue", size = 2, na.rm = TRUE) +
       stat_function(fun = function(x) predict(quad_model, newdata = data.frame(x = x)), color = "red", linewidth = 1, na.rm = TRUE) +
       labs(
         title = "Density Plot with Quadratic Fit",
