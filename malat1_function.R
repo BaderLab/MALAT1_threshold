@@ -32,13 +32,13 @@
 # has no local maxima. In this case, the function searches for the closest MALAT1 value to the default value, 2, to use in place of
 # a real local maximum.
 
-define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
+define_malat1_threshold_ggplot2 <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
                                     chosen_min = 1, smooth = 1, abs_min = 0.3,
                                     rough_max = 2, print_plots = TRUE, return_plots = FALSE) {
   tryCatch({
     # Calculate the density values
     density_data <- density(counts, bw = bw,
-                            from = min(counts),
+                           from = min(counts),
                             to = max(counts))
     # Fit a smooth line to the data
     fit <- smooth.spline(density_data$x, density_data$y, spar = smooth)
@@ -51,6 +51,10 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
       # Find x-val closest to rough_max
       local_maxima <- density_data$x[which(abs(density_data$x - rough_max) == min(abs(density_data$x - rough_max)))]
     }
+    # Plot the density with the local maxima
+    plot(density_data, main = "Density Plot with Local Maxima")
+    lines(fit, col = "blue")
+    points(local_maxima, predict(fit, local_maxima)$y, col = "red", pch = 19)
 
     # Create data frames for plotting
     density_df <- data.frame(x = density_data$x, y = density_data$y)
@@ -59,28 +63,31 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
 
     # Plot the density with the local maxima using ggplot2
     p1 <- ggplot() +
-      geom_line(data = density_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "black", na.rm = TRUE) +
-      geom_line(data = fit_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "blue", na.rm = TRUE) +
-      geom_point(data = local_maxima_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "red", size = 3, na.rm = TRUE) +
+      geom_line(data = density_df, aes(x = x, y = y), color = "black") +
+      geom_line(data = fit_df, aes(x = x, y = y), color = "blue") +
+      geom_point(data = local_maxima_df, aes(x = x, y = y), color = "red", size = 3) +
       ggtitle("Density Plot with Local Maxima") +
       cowplot::theme_cowplot() +
       ylim(-0.05, NA)
-
 
     # Find the local minima
     local_minima <- density_data$x[which(diff(sign(first_derivative$y)) == 2)]
     if(length(local_minima) == 0) {
       local_minima <- abs_min
     }
+    # Plot the density with the local minima
+    plot(density_data, main = "Density Plot with Local Minima")
+    lines(fit, col = "blue")
+    points(local_minima, predict(fit, local_minima)$y, col = "red", pch = 19)
 
     # Create data frame for local minima
     local_minima_df <- data.frame(x = local_minima, y = predict(fit, local_minima)$y)
 
     # Plot the density with the local minima using ggplot2
     p2 <- ggplot() +
-      geom_line(data = density_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "black", na.rm = TRUE) +
-      geom_line(data = fit_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "blue", na.rm = TRUE) +
-      geom_point(data = local_minima_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "red", size = 3, na.rm = TRUE) +
+      geom_line(data = density_df, aes(x = x, y = y), color = "black") +
+      geom_line(data = fit_df, aes(x = x, y = y), color = "blue") +
+      geom_point(data = local_minima_df, aes(x = x, y = y), color = "red", size = 3) +
       ggtitle("Density Plot with Local Minima") +
       cowplot::theme_cowplot() +
       ylim(-0.05, NA)
@@ -107,10 +114,19 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
     # Fit a quadratic model (y ~ x + I(x^2))
     quad_model <- lm(y ~ poly(x, 2, raw = TRUE), data = subset_df)
 
-    p3 <- ggplot(df, aes(x = .data[["x"]], y = .data[["y"]])) +
+    # Plot quadratic
+    plot(df$x, df$y,
+         xlab = "Normalized MALAT1 expression",
+         ylab = "Density value")
+    # Add the extracted subset data
+    points(subset_df$x, subset_df$y, pch = 16, col = "blue")
+    # Add the fitted quadratic curve
+    curve(predict(quad_model, newdata = data.frame(x = x)), add = TRUE, col = "red", lwd = 2)
+
+    p3 <- ggplot(df, aes(x = x, y = y)) +
       geom_line(color = "black") +
-      geom_point(data = subset_df, aes(x = .data[["x"]], y = .data[["y"]]), color = "blue", size = 2, na.rm = TRUE) +
-      stat_function(fun = function(x) predict(quad_model, newdata = data.frame(x = x)), color = "red", linewidth = 1, na.rm = TRUE) +
+      geom_point(data = subset_df, aes(x = x, y = y), color = "blue", size = 2) +
+      stat_function(fun = function(x) predict(quad_model, newdata = data.frame(x = x)), color = "red", size = 1) +
       labs(
         title = "Density Plot with Quadratic Fit",
         x = "Normalized MALAT1 expression",
@@ -134,13 +150,19 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
       x_intercept1 <- abs_min
     }
 
+    # Plot histogram with threshold
+    hist(counts, breaks = breaks,
+         xlab = "Normalized MALAT1 expression",
+         ylab = "Number of cells")
+    abline(v = x_intercept1, col = "red", lwd = 2)
+
     p4 <- ggplot(data = data.frame(counts), aes(x = .data[["counts"]])) +
-      geom_histogram(color = "black", bins = breaks, fill = "dodgerblue", na.rm = TRUE) +
+      geom_histogram(color = "black", bins = breaks, fill = "dodgerblue") +
       cowplot::theme_cowplot() +
       geom_vline(xintercept = x_intercept1, color = "red", linewidth = lwd) +
       ggtitle("MALAT1")
 
-    plots <- patchwork::wrap_plots(p1, p2, p3, p4, ncol = 2) + patchwork::plot_annotation(tag_levels = "A")
+    plots <- wrap_plots(p1, p2, p3, p4, ncol = 2)
 
     if (isTRUE(x = print_plots)) {
       print(plots)
@@ -156,12 +178,16 @@ define_malat1_threshold <- function(counts, bw = 0.1, lwd = 2, breaks = 100,
 
   }, error = function(e) {
     # Code to execute if an error occurs
+    message(" An error occurred: Please make sure you have use a vector of normalized counts as input. This may also indicate that you have no high MALAT1 peaks, meaning this particular sample may be poor quality. Please check your histogram of normalized MALAT1 counts to investigate: ", e$message)
+    hist(counts, breaks = breaks,
+         xlab = "Normalized MALAT1 expression",
+         ylab = "Number of cells")
+
     ggplot(data = data.frame(counts), aes(x = .data[["counts"]])) +
       geom_histogram(color = "black", bins = breaks, fill = "dodgerblue") +
       cowplot::theme_cowplot() +
       ggtitle("MALAT1")
 
-    stop(" An error occurred: Please make sure you have use a vector of normalized counts as input. This may also indicate that you have no high MALAT1 peaks, meaning this particular sample may be poor quality. Please check your histogram of normalized MALAT1 counts to investigate: ", e$message)
-
+    return(2)
   })
 }
