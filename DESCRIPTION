@@ -1,0 +1,22 @@
+Package: malatin
+Title: MALAT1-based filter for scRNA-seq
+Version: 0.0.0.9000
+Authors@R: 
+    person("Zoe", "Clarke", , "zc456@cam.ac.uk", role = c("aut", "cre"))
+Description: Implements a MALAT1-based filtering approach for single-cell RNA-sequencing data using a two-component gamma mixture model. The package provides functions to estimate MALAT1 expression thresholds from raw or filtered count vectors, identify cells with elevated MALAT1 expression, and visualize model fits for quality assessment.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    gamlss.mx,
+    ggplot2
+Suggests: 
+    Seurat,
+    testthat (>= 3.0.0)
+Depends: 
+    R (>= 3.5),
+    gamlss,
+    gamlss.dist
+LazyData: true
+Config/testthat/edition: 3
