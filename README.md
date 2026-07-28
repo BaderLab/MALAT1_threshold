@@ -1,78 +1,108 @@
-# How to apply a _MALAT1_ threshold for your scRNA-seq object in R
+# MALATin
 
-For a detailed explanation of our findings or citation of this work, please see our preprint on BioRxiv: https://doi.org/10.1101/2024.07.14.603469. Please don't hesitate to ask any questions or let us know if you're getting an unexpected result. We have done our best to make this method robust, but data can be weird and noisy, so we're happy to offer our feedback and look into improvements!
+**MALATin** is an R package for identifying and filtering low-MALAT1 cells in single-cell RNA-sequencing (scRNA-seq) data. Low MALAT1 expression is associated with cells lacking an intact nucleus, including empty droplets, cell fragments, and mature erythrocytes. The package automatically estimates a data-driven MALAT1 expression threshold using a two-component gamma mixture model and returns the cells that pass this quality-control filter.
 
-Low _MALAT1_ expression is associated with a lack of a nucleus in single-cell RNA-sequencing data. Cells without nuclei are likely either empty droplets filled with ambient RNA, cell fragments, or mature erythrocytes. Our function `define_malat1_threshold` takes a vector of normalized _MALAT1_ expression, and outputs a minimum threshold value that can be used to filter your scRNA-seq object.
+This package can be used to extract cells from a raw matrix of cells + empty droplets (e.g. as an alternative to EmptyDrops or CellRanger), or on a filtered matrix of cells but before clustering and differential expression analysis.
 
-We hope to develop a package to allow a user to easily access this function. In the meantime, you can use this the function by either pasting the code directly into your R script, or cloning the GitHub repo, moving the `malat1_function.R` script into your analysis directory, and adding `source("malat1_function.R")` to the top of your script to access the function.
+For a detailed description of the method, please see our preprint:
 
-We generally recommend to use this function early in a QC pipeline, after reading in and normalizing your data. After filtering for minimum _MALAT1_ content, you can check for UMI and mitochondrial distribution to see if further filters are necessary, but you may find that this filter is sufficient. We speculate that cells with high _MALAT1_ but also high mitochondrial content may simply be metabolically active. Doublet filtering is unrelated to this pipeline and can be performed afterwards. Similarly, this function does not correct ambient RNA expression, so correction with e.g. SoupX may be performed after filtering for your final cell matrix, if desired.
+Clarke et al. (2024). MALAT1 expression identifies low-quality cells in single-cell RNA sequencing datasets. BioRxiv. https://doi.org/10.1101/2024.07.14.603469
 
-This function can also be used to perform additional filtering on a processed dataset. You should get slightly different results (but a consistent broad pattern) if you run this function on individual samples or integrated datasets. Looking at individual samples is likely the best approach, as batch effect may impact the overall MALAT1 distribution of a sample, and these distributions may not integrate perfectly. We do not recommend running this function on individual cell types, as we have found that outliers occur at a sample level rather than a cell-type level. Poor-quality cells tend to cluster together and may therefore appear as a single cell type which will not be filtered accurately. We note that the function tends to work best on larger sample sizes (so it would struggle to find patterns in tiny samples). 
+If you encounter unexpected behaviour or have suggestions for improvements, please open a GitHub issue.
 
-To use this function, isolate the normalized _MALAT1_ expression values from your scRNA-seq object. In a Seurat object, this may look like:
+---
 
-```
-norm_counts <- sobj@assays$RNA@data["MALAT1",]
-```
+## Installation
 
-This can be fed into the _MALAT1_ threshold function which will return the minimum _MALAT1_ value that each cell should contain:
+Install the development version from GitHub using **remotes** or **devtools**:
 
-```
-threshold <- define_malat1_threshold(norm_counts)
-```
+# install.packages("remotes")
+remotes::install_github("BaderLab/malatin")
 
-This threshold value can be used to flag or filter cells from your single-cell object. The code below flags cells that don't pass the threshold by using `TRUE` values to represent good cells, and `FALSE` to represent cells that don't pass the filter:
+---
 
-```
-malat1_threshold <- norm_counts > threshold
-sobj$malat1_threshold <- malat1_threshold
-sobj$malat1_threshold <- factor(sobj$malat1_threshold, levels = c("TRUE","FALSE"))
-DimPlot(sobj, group.by = "malat1_threshold")
-```
 
-From this, you can use the result to remove cells from your object:
+## Quick start
+
+### Filter an existing vector of _MALAT1_ counts
 
 ```
-good_cells <- WhichCells(sobj, expression = malat1_threshold == TRUE)
-good_sobj <- subset(sobj, cells = good_cells)
+library(malatin)
+
+data(example_counts)
+data(example_barcodes)
+
+# From an object already filtered with e.g. CellRanger or EmptyDrops
+result <- malat1_thres_filtered(counts = example_counts, barcodes = example_barcodes)
+# From a raw sample that has not yet been processed by e.g. CellRanger or EmptyDrops
+# result <- malat1_thres_raw(counts = example_counts, barcodes = example_barcodes)
+
+result$threshold head(result$cells)
 ```
 
-## Example analysis
+The returned object is a list containing
+- `threshold`: estimated _MALAT1_ threshold
+- `cells`: barcodes of cells passing the filter
+- `plot`: histogram with fitted mixture model (optional)
+- `histogram`: histogram of MALAT1 expression (optional)
 
-We can demonstrate using this function with the Tabula Muris Senis Pancreas dataset which can be downloaded as a Seurat object from [cellxgene](https://cellxgene.cziscience.com/collections/0b9d8a04-bb9d-44da-aa27-705bb65b54eb). The data are also described in this paper:
+---
 
-The Tabula Muris Consortium. A single-cell transcriptomic atlas characterizes ageing tissues in the mouse. Nature 583, 590–595 (2020). https://doi.org/10.1038/s41586-020-2496-1
+## Read CellRanger output directly
 
-Here is a brief look at the cells in the dataset:
+For raw Cell Ranger output:
 
-<img width="400" alt="tabula_muris_senis_pancreas_celltypes" src="https://github.com/user-attachments/assets/bc4a6e67-640c-44d3-b699-0d63860d83bc">
+```
+result <- malat1_read_10X_raw(raw_cellranger_folder = "filtered_feature_bc_matrix/")
+```
 
-Here is _MALAT1_ projected onto the UMAP, and a histogram of the normalized _MALAT1_ values for that dataset. You can see that certain cells in the pancreatic acinar cell cluster have especially low _MALAT1_ values and may be suffering from some quality issues. Cells that may actually be empty droplets would be those in the lower _MALAT1_ expression peak in the histogram, in addition to those with a peak at zero:
+or from an HDF5 file:
 
-<img width="400" alt="tabula_muris_senis_pancreas_malat1_umap" src="https://github.com/user-attachments/assets/5ed0ba68-efc4-45cd-bdf4-d4a9e403a6f2">
-<img width="397" alt="tabula_muris_senis_pancreas_malat1_hist_noLine" src="https://github.com/user-attachments/assets/5ba81742-0295-4605-a8f0-7384f108dd32">
+```
+result <- malat1_read_10X_h5_raw(raw_cellranger_h5 = "filtered_feature_bc_matrix.h5")
+```
 
-This function fits a density function to the histogram, and models a quadratic to the highest _MALAT1_ expression peak above the normalized expression value of two. It finds this peak by analysing local minima and maxima that appear on the density function. The lower x-intercept of this quadratic is used to define the minimum _MALAT1_ threshold.
+---
 
-The function outputs the following plots: (1) The density plot with local minima annotated. (2) The density plot with local maxima annotated. (3) The points of the density function in black, with points highlighted in blue covering the range of the data that the quadratic is fit to, with the quadratic fit overtop of the points in red (below). (4) The histogram of normalized _MALAT1_ counts with the red line indicating the minimum threshold value (below).
+## Output
 
-<img width="400" alt="tabula_muris_senis_pancreas_malat1_quad" src="https://github.com/user-attachments/assets/96e7ad95-1b39-461f-b561-7f4c3a4efc3f">
-<img width="372" alt="tabula_muris_senis_pancreas_malat1_hist" src="https://github.com/user-attachments/assets/ace9f285-5b80-4387-b388-ff1b24f6e92c">
+The package estimates a minimum MALAT1 expression threshold by fitting a two-component gamma mixture model to the MALAT1 distribution.
 
-Using the code above, we can see which cells passed the filter. Most of the cells that failed the filter are, in fact, pancreatic acinar cells (highlighted below as "FALSE" for having not passed the filter):
+Depending on the function arguments, the returned object may include
 
-<img width="400" alt="tabula_muris_senis_pancreas_malat1_dimplot" src="https://github.com/user-attachments/assets/64049f75-6b54-44b3-95a1-620e61f6b346">
+- the estimated threshold,
+- the barcodes of cells passing the filter,
+- a histogram of MALAT1 expression,
+- the fitted mixture model overlaid on the histogram.
 
-## Troubleshooting
+These plots can be used to visually assess whether the inferred threshold is appropriate for your dataset.
 
-This analysis relies on the assumption that there is a _MALAT1_ peak above the normalized value of one. If such a peak (i.e. local maximum above one) does not exist, the function may call an error. This is probably a good sign to take a closer look at your data anyway, but you can also lower this value by adjusting the parameter `chosen_min`.
+---
 
-Some histograms are wonky and can have a lot of little peaks, especially if you are working with integrated samples (which may just have different _MALAT1_ peaks due to batch effect) or samples with very few cells in them (which may have lots of little peaks due to data sparsity). To make the function more robust to these scenarios, there is a smoothing parameter, `smooth`, which is set to a high value of 1 as default, but can be lowered closer to zero for a tighter fit to the histogram. Further, if the function has trouble finding appropriate minima and maxima, `abs_min` and `rough_max` are set to 0.3 and 2 respectively to guide extreme minimum and likely maximum values to help the function work properly and not throw an error. Unless something really weird happens that I haven't predicted yet, you should always end up with a _MALAT1_ threshold of 0.3 or higher. If you are worried about throwing away too many cells with this lower boundary, you can always change `abs_min` to zero, but it may not help you keep anything good.
+## Included example data
 
-Other parameters that can be modified are `bw`, `lwd`, and `breaks`. Increasing or decreasing `bw` to say 0.5 or 0.01 respectively will change the plotting of the density function, with higher values creating a function with fewer inflection points (i.e. a "less curvy" function). Modifying `lwd` changes the thickness of the line on the final plotted histogram, and `breaks` is the number of buckets used in the histogram.
+Included example data
 
-Worst case scenario, if the function doesn't work for some weird, confusing reason, you can always eyeball your _MALAT1_ values to try and figure out if there is something fishy going on with your data. You can manually choose your own threshold by looking at the histogram, or just pick out clusters of concerning cells by projecting _MALAT1_ onto your UMAP.
+The package contains a small example dataset:
 
+- `example_counts`
+- `example_barcodes`
 
+These datasets are used throughout the package examples and can also be used for testing installations.
+
+---
+
+## Citation
+
+If you use MALATin in your research, please cite:
+
+> Clarke et al. (2024). MALAT1 expression identifies low-quality cells in single-cell RNA sequencing datasets. BioRxiv. https://doi.org/10.1101/2024.07.14.603469
+
+---
+
+## Issues
+
+If you encounter bugs or have suggestions for improvements, please open a GitHub Issue.
+
+We are happy to help troubleshoot unusual datasets and improve the robustness of the package.
 
