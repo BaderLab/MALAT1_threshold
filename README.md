@@ -6,7 +6,7 @@ This package can be used to extract cells from a raw matrix of cells + empty dro
 
 For a detailed description of the method, please see our preprint:
 
-Clarke et al. (2024). MALAT1 expression identifies low-quality cells in single-cell RNA sequencing datasets. BioRxiv. https://doi.org/10.1101/2024.07.14.603469
+> Clarke and Bader (2024). _MALAT1_ expression indicates cell quality in single-cell RNA sequencing data. BioRxiv. [https://doi.org/10.1101/2024.07.14.603469](https://doi.org/10.1101/2024.07.14.603469).
 
 If you encounter unexpected behaviour or have suggestions for improvements, please open a GitHub issue.
 
@@ -96,7 +96,7 @@ These datasets are used throughout the package examples and can also be used for
 
 If you use MALATin in your research, please cite:
 
-> Clarke et al. (2024). MALAT1 expression identifies low-quality cells in single-cell RNA sequencing datasets. BioRxiv. https://doi.org/10.1101/2024.07.14.603469
+> Clarke and Bader (2024). _MALAT1_ expression indicates cell quality in single-cell RNA sequencing data. BioRxiv. [https://doi.org/10.1101/2024.07.14.603469](https://doi.org/10.1101/2024.07.14.603469).
 
 ---
 
