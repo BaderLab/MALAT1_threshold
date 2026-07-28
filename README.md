@@ -16,8 +16,10 @@ If you encounter unexpected behaviour or have suggestions for improvements, plea
 
 Install the development version from GitHub using **remotes** or **devtools**:
 
+```
 # install.packages("remotes")
 remotes::install_github("BaderLab/malatin")
+```
 
 ---
 
